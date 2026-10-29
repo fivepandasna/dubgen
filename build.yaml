@@ -1,0 +1,16 @@
+---
+name: "Dubtitles"
+guid: "b6f3a1c2-7d4e-4f59-9a31-5c8e2d0f1a77"
+version: "1.0.0.0"
+targetAbi: "10.11.0.0"
+framework: "net9.0"
+owner: "fivepandasna"
+overview: "Generates English subtitles from the English dub of foreign-language media using Subgen."
+description: >
+  For movies and episodes whose primary audio is a foreign language but which also carry an English audio track,
+  Dubtitles sends the English track to Subgen and saves the result next to the media as <title>.en.Dubtitles.srt.
+  Items that already have a Dubtitles file are skipped. Supports per-library selection and optional bearer-token
+  webhooks before and after a run (e.g. to wake up and shut down a remote Subgen machine).
+category: "General"
+artifacts:
+  - "Jellyfin.Plugin.Dubtitles.dll"

@@ -15,14 +15,32 @@ internal static class DubtitleFiles
     {
         var dir = Path.GetDirectoryName(mediaPath) ?? string.Empty;
         var name = Path.GetFileNameWithoutExtension(mediaPath);
-        return Path.Combine(dir, $"{name}.en.{tag}.srt");
+        return Path.Combine(dir, $"{name}.en.{CleanTag(tag)}.srt");
+    }
+
+    private static string CleanTag(string? tag)
+    {
+        if (string.IsNullOrWhiteSpace(tag))
+        {
+            return "Dubtitles";
+        }
+
+        var invalid = Path.GetInvalidFileNameChars();
+        var chars = tag.Trim().Select(c => c == '.' || Array.IndexOf(invalid, c) >= 0 ? '_' : c).ToArray();
+        return new string(chars);
+    }
+
+    private static bool IsDubtitleToken(string token, string tag)
+    {
+        return token.StartsWith("dubtitle", StringComparison.OrdinalIgnoreCase)
+               || token.Equals(CleanTag(tag), StringComparison.OrdinalIgnoreCase);
     }
 
     /// <summary>
     /// True if a sidecar subtitle next to the media file has a "dubtitle*" token
-    /// (matches both ".Dubtitle." and ".Dubtitles.", case-insensitive).
+    /// (matches both ".Dubtitle." and ".Dubtitles.", case-insensitive) or the configured tag.
     /// </summary>
-    public static bool Exists(string mediaPath, DirectoryCache cache)
+    public static bool Exists(string mediaPath, DirectoryCache cache, string tag)
     {
         var dir = Path.GetDirectoryName(mediaPath);
         if (string.IsNullOrEmpty(dir))
@@ -49,7 +67,7 @@ internal static class DubtitleFiles
 
             var middle = fileName.Substring(prefix.Length, fileName.Length - prefix.Length - ext.Length);
             var tokens = middle.Split('.', StringSplitOptions.RemoveEmptyEntries);
-            var idx = Array.FindIndex(tokens, t => t.StartsWith("dubtitle", StringComparison.OrdinalIgnoreCase));
+            var idx = Array.FindIndex(tokens, t => IsDubtitleToken(t, tag));
             if (idx < 0)
             {
                 continue;

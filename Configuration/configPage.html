@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Dubtitles</title>
+</head>
+<body>
+<div id="DubtitlesConfigPage" data-role="page" class="page type-interior pluginConfigurationPage"
+     data-require="emby-input,emby-button,emby-select,emby-checkbox,emby-textarea">
+    <div data-role="content">
+        <div class="content-primary">
+            <h1>Dubtitles</h1>
+            <p>
+                Sends the English audio track of foreign-language media to Subgen and saves the result as
+                <code>&lt;title&gt;.en.Dubtitles.srt</code> next to the media file. Run it from
+                <strong>Dashboard &rarr; Scheduled Tasks &rarr; Dubtitles &rarr; Generate Dubtitles</strong>
+                (default: daily at 02:00).
+            </p>
+
+            <form id="DubtitlesConfigForm">
+
+                <h2>Subgen</h2>
+                <div class="inputContainer">
+                    <label class="inputLabel inputLabelUnfocused" for="SubgenUrl">Subgen URL</label>
+                    <input id="SubgenUrl" is="emby-input" type="text" />
+                    <div class="fieldDescription">Base URL, e.g. http://192.168.1.50:9000 (no trailing /asr).</div>
+                </div>
+                <div class="inputContainer">
+                    <label class="inputLabel inputLabelUnfocused" for="RequestTimeoutMinutes">Per-item timeout (minutes)</label>
+                    <input id="RequestTimeoutMinutes" is="emby-input" type="number" min="1" />
+                </div>
+
+                <h2>Libraries</h2>
+                <div class="fieldDescription">
+                    Tick the libraries to process. <strong>Leave all unticked to process every library.</strong>
+                    Useful for running only on e.g. an Anime library and skipping Movies / Shows.
+                </div>
+                <div id="LibraryList" class="checkboxList paperList" style="margin: 0.5em 0 1em;"></div>
+
+                <label class="checkboxContainer">
+                    <input id="IncludeMovies" is="emby-checkbox" type="checkbox" />
+                    <span>Include movies</span>
+                </label>
+                <label class="checkboxContainer">
+                    <input id="IncludeEpisodes" is="emby-checkbox" type="checkbox" />
+                    <span>Include episodes</span>
+                </label>
+
+                <h2>Skipping</h2>
+                <label class="checkboxContainer">
+                    <input id="SkipSeriesWithAnyDubtitles" is="emby-checkbox" type="checkbox" />
+                    <span>Skip a whole series once any episode already has a Dubtitles file</span>
+                </label>
+                <div class="fieldDescription">
+                    Off: only episodes/movies that already have a Dubtitles file are skipped, so a half-finished series
+                    resumes where it stopped. On: the rest of that series is left alone.
+                </div>
+                <div class="inputContainer">
+                    <label class="inputLabel inputLabelUnfocused" for="MaxItemsPerRun">Max items per run</label>
+                    <input id="MaxItemsPerRun" is="emby-input" type="number" min="0" />
+                    <div class="fieldDescription">0 = no limit.</div>
+                </div>
+
+                <h2>Output</h2>
+                <div class="inputContainer">
+                    <label class="inputLabel inputLabelUnfocused" for="SubtitleTag">Subtitle tag</label>
+                    <input id="SubtitleTag" is="emby-input" type="text" />
+                    <div class="fieldDescription">Produces Title.en.&lt;tag&gt;.srt. Default: Dubtitles.</div>
+                </div>
+                <label class="checkboxContainer">
+                    <input id="RefreshAfterWrite" is="emby-checkbox" type="checkbox" />
+                    <span>Refresh the item after writing so the subtitle shows up immediately</span>
+                </label>
+
+                <h2>Before run webhook</h2>
+                <div class="fieldDescription">
+                    Sent once, only when there is something to process, before anything goes to Subgen. Use it to wake
+                    or start a remote machine.
+                </div>
+                <label class="checkboxContainer">
+                    <input id="PreEnabled" is="emby-checkbox" type="checkbox" />
+                    <span>Enable before-run webhook</span>
+                </label>
+                <div class="inputContainer">
+                    <label class="inputLabel inputLabelUnfocused" for="PreUrl">URL</label>
+                    <input id="PreUrl" is="emby-input" type="text" />
+                </div>
+                <div class="selectContainer">
+                    <label class="selectLabel" for="PreMethod">Method</label>
+                    <select id="PreMethod" is="emby-select">
+                        <option value="POST">POST</option>
+                        <option value="GET">GET</option>
+                        <option value="PUT">PUT</option>
+                    </select>
+                </div>
+                <div class="inputContainer">
+                    <label class="inputLabel inputLabelUnfocused" for="PreBearerToken">Bearer token</label>
+                    <input id="PreBearerToken" is="emby-input" type="password" autocomplete="off" />
+                    <div class="fieldDescription">Sent as "Authorization: Bearer &lt;token&gt;". Leave empty for none.</div>
+                </div>
+                <div class="inputContainer">
+                    <label class="inputLabel inputLabelUnfocused" for="PreBody">JSON body (optional)</label>
+                    <textarea id="PreBody" is="emby-textarea" rows="3"></textarea>
+                </div>
+                <div class="inputContainer">
+                    <label class="inputLabel inputLabelUnfocused" for="PreWebhookDelaySeconds">Extra wait after webhook (seconds)</label>
+                    <input id="PreWebhookDelaySeconds" is="emby-input" type="number" min="0" />
+                </div>
+                <label class="checkboxContainer">
+                    <input id="WaitForSubgenReady" is="emby-checkbox" type="checkbox" />
+                    <span>Then wait until Subgen answers before starting</span>
+                </label>
+                <div class="inputContainer">
+                    <label class="inputLabel inputLabelUnfocused" for="SubgenReadyTimeoutMinutes">Give up waiting after (minutes)</label>
+                    <input id="SubgenReadyTimeoutMinutes" is="emby-input" type="number" min="1" />
+                    <div class="fieldDescription">If Subgen never comes up, the run is aborted (the after-run webhook still fires).</div>
+                </div>
+
+                <h2>After run webhook</h2>
+                <div class="fieldDescription">
+                    Sent when processing ends &mdash; finished, failed or cancelled &mdash; but only if there was work to
+                    do. Use it to shut the remote machine down again.
+                </div>
+                <label class="checkboxContainer">
+                    <input id="PostEnabled" is="emby-checkbox" type="checkbox" />
+                    <span>Enable after-run webhook</span>
+                </label>
+                <div class="inputContainer">
+                    <label class="inputLabel inputLabelUnfocused" for="PostUrl">URL</label>
+                    <input id="PostUrl" is="emby-input" type="text" />
+                </div>
+                <div class="selectContainer">
+                    <label class="selectLabel" for="PostMethod">Method</label>
+                    <select id="PostMethod" is="emby-select">
+                        <option value="POST">POST</option>
+                        <option value="GET">GET</option>
+                        <option value="PUT">PUT</option>
+                    </select>
+                </div>
+                <div class="inputContainer">
+                    <label class="inputLabel inputLabelUnfocused" for="PostBearerToken">Bearer token</label>
+                    <input id="PostBearerToken" is="emby-input" type="password" autocomplete="off" />
+                    <div class="fieldDescription">Stored unencrypted in the plugin's config file on the Jellyfin server.</div>
+                </div>
+                <div class="inputContainer">
+                    <label class="inputLabel inputLabelUnfocused" for="PostBody">JSON body (optional)</label>
+                    <textarea id="PostBody" is="emby-textarea" rows="3"></textarea>
+                </div>
+
+                <div>
+                    <button is="emby-button" type="submit" class="raised button-submit block emby-button">
+                        <span>Save</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script type="text/javascript">
+        (function () {
+            var pluginId = 'b6f3a1c2-7d4e-4f59-9a31-5c8e2d0f1a77';
+            var page = document.querySelector('#DubtitlesConfigPage');
+            var form = document.querySelector('#DubtitlesConfigForm');
+
+            function $(id) { return page.querySelector('#' + id); }
+
+            function esc(s) {
+                return String(s).replace(/[&<>"']/g, function (c) {
+                    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+                });
+            }
+
+            function toInt(id, fallback) {
+                var n = parseInt($(id).value, 10);
+                return isNaN(n) ? fallback : n;
+            }
+
+            function loadWebhook(prefix, wh) {
+                wh = wh || {};
+                $(prefix + 'Enabled').checked = !!wh.Enabled;
+                $(prefix + 'Url').value = wh.Url || '';
+                $(prefix + 'Method').value = wh.Method || 'POST';
+                $(prefix + 'BearerToken').value = wh.BearerToken || '';
+                $(prefix + 'Body').value = wh.Body || '';
+            }
+
+            function readWebhook(prefix) {
+                return {
+                    Enabled: $(prefix + 'Enabled').checked,
+                    Url: $(prefix + 'Url').value.trim(),
+                    Method: $(prefix + 'Method').value,
+                    BearerToken: $(prefix + 'BearerToken').value.trim(),
+                    Body: $(prefix + 'Body').value
+                };
+            }
+
+            // Libraries that can contain movies or episodes. Mixed libraries have no collection type.
+            function isRelevant(folder) {
+                var t = (folder.CollectionType || '').toLowerCase();
+                return t === '' || t === 'movies' || t === 'tvshows' || t === 'homevideos' || t === 'mixed';
+            }
+
+            function renderLibraries(folders, selectedIds) {
+                var selected = {};
+                (selectedIds || []).forEach(function (id) { selected[String(id).replace(/-/g, '').toLowerCase()] = true; });
+
+                var html = '';
+                folders.filter(isRelevant).forEach(function (f) {
+                    var key = String(f.ItemId).replace(/-/g, '').toLowerCase();
+                    var type = f.CollectionType ? ' (' + esc(f.CollectionType) + ')' : ' (mixed)';
+                    html += '<label class="checkboxContainer">' +
+                        '<input is="emby-checkbox" type="checkbox" class="chkLibrary" data-id="' + esc(f.ItemId) + '"' +
+                        (selected[key] ? ' checked' : '') + ' />' +
+                        '<span>' + esc(f.Name) + type + '</span></label>';
+                });
+
+                $('LibraryList').innerHTML = html || '<div class="fieldDescription">No libraries found.</div>';
+            }
+
+            page.addEventListener('pageshow', function () {
+                Dashboard.showLoadingMsg();
+
+                Promise.all([
+                    ApiClient.getPluginConfiguration(pluginId),
+                    ApiClient.getVirtualFolders()
+                ]).then(function (results) {
+                    var config = results[0];
+                    var folders = results[1] || [];
+
+                    $('SubgenUrl').value = config.SubgenUrl || '';
+                    $('RequestTimeoutMinutes').value = config.RequestTimeoutMinutes;
+                    $('IncludeMovies').checked = !!config.IncludeMovies;
+                    $('IncludeEpisodes').checked = !!config.IncludeEpisodes;
+                    $('SkipSeriesWithAnyDubtitles').checked = !!config.SkipSeriesWithAnyDubtitles;
+                    $('MaxItemsPerRun').value = config.MaxItemsPerRun;
+                    $('SubtitleTag').value = config.SubtitleTag || 'Dubtitles';
+                    $('RefreshAfterWrite').checked = !!config.RefreshAfterWrite;
+
+                    loadWebhook('Pre', config.PreWebhook);
+                    $('PreWebhookDelaySeconds').value = config.PreWebhookDelaySeconds;
+                    $('WaitForSubgenReady').checked = !!config.WaitForSubgenReady;
+                    $('SubgenReadyTimeoutMinutes').value = config.SubgenReadyTimeoutMinutes;
+                    loadWebhook('Post', config.PostWebhook);
+
+                    renderLibraries(folders, config.EnabledLibraryIds);
+                    Dashboard.hideLoadingMsg();
+                });
+            });
+
+            form.addEventListener('submit', function (e) {
+                e.preventDefault();
+                Dashboard.showLoadingMsg();
+
+                ApiClient.getPluginConfiguration(pluginId).then(function (config) {
+                    config.SubgenUrl = $('SubgenUrl').value.trim();
+                    config.RequestTimeoutMinutes = Math.max(1, toInt('RequestTimeoutMinutes', 120));
+                    config.IncludeMovies = $('IncludeMovies').checked;
+                    config.IncludeEpisodes = $('IncludeEpisodes').checked;
+                    config.SkipSeriesWithAnyDubtitles = $('SkipSeriesWithAnyDubtitles').checked;
+                    config.MaxItemsPerRun = Math.max(0, toInt('MaxItemsPerRun', 0));
+                    config.SubtitleTag = $('SubtitleTag').value.trim() || 'Dubtitles';
+                    config.RefreshAfterWrite = $('RefreshAfterWrite').checked;
+
+                    config.PreWebhook = readWebhook('Pre');
+                    config.PreWebhookDelaySeconds = Math.max(0, toInt('PreWebhookDelaySeconds', 0));
+                    config.WaitForSubgenReady = $('WaitForSubgenReady').checked;
+                    config.SubgenReadyTimeoutMinutes = Math.max(1, toInt('SubgenReadyTimeoutMinutes', 10));
+                    config.PostWebhook = readWebhook('Post');
+
+                    config.EnabledLibraryIds = Array.prototype.slice
+                        .call(page.querySelectorAll('.chkLibrary'))
+                        .filter(function (c) { return c.checked; })
+                        .map(function (c) { return c.getAttribute('data-id'); });
+
+                    ApiClient.updatePluginConfiguration(pluginId, config).then(function (result) {
+                        Dashboard.processPluginConfigurationUpdateResult(result);
+                    });
+                });
+
+                return false;
+            });
+        })();
+    </script>
+</div>
+</body>
+</html>
