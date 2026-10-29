@@ -12,13 +12,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- Keep these in step with the Jellyfin server version you target (see targetAbi in build.yaml). -->
-    <PackageReference Include="Jellyfin.Controller" Version="10.11.5" ExcludeAssets="runtime" />
-    <PackageReference Include="Jellyfin.Model" Version="10.11.5" ExcludeAssets="runtime" />
+    <PackageReference Include="Jellyfin.Controller" Version="12.4.0" ExcludeAssets="runtime" />
+    <PackageReference Include="Jellyfin.Model" Version="12.4.0" ExcludeAssets="runtime" />
   </ItemGroup>
 
   <ItemGroup>
-    <!-- Served by Plugin.GetPages() as the plugin's settings page. -->
     <EmbeddedResource Include="Configuration\configPage.html" />
   </ItemGroup>
 
