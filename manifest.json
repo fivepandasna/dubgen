@@ -7,8 +7,8 @@
         "changelog": "Initial build",
         "targetAbi": "12.4.0.0",
         "sourceUrl": "https://github.com/fivepandasna/dubgen/releases/download/v1.0.0.0/Jellyfin.Plugin.Dubgen_1.0.0.0.zip",
-        "checksum": "a9549933d638717c23a3b8579ecff05f",
-        "timestamp": "2026-10-29T19:29:15Z"
+        "checksum": "2aae933e8ff9b79747f48e2e5afc1d31",
+        "timestamp": "2026-10-29T19:36:00Z"
       }
     ],
     "name": "Dubgen",
