@@ -22,7 +22,7 @@ Anything that already has a `.Dubtitle`/`.Dubtitles` sidecar subtitle is skipped
 
 ## Build & install
 
-Requires the .NET 9 SDK and targets Jellyfin 10.11.x.
+Requires the .NET 10 SDK and targets Jellyfin 12.4.x.
 
 ```bash
 dotnet publish -c Release -o out

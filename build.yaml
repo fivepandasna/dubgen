@@ -3,7 +3,7 @@ name: "Dubgen"
 guid: "b6f3a1c2-7d4e-4f59-9a31-5c8e2d0f1a77"
 version: "1.0.0.0"
 targetAbi: "12.4.0.0"
-framework: "net9.0"
+framework: "net10.0"
 owner: "fivepandasna"
 overview: "Generates English subtitles from the English dub of foreign-language media using Subgen."
 description: >
