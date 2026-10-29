@@ -1,0 +1,130 @@
+name: Build & publish
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to publish (e.g. 1.2.0 or 1.2.0.0). Leave blank to use the version in the .csproj."
+        required: false
+        type: string
+      changelog:
+        description: "Changelog text for this release"
+        required: false
+        type: string
+        default: ""
+
+permissions:
+  contents: write # create releases, push the gh-pages branch
+
+# Serialise runs so two releases can't race on manifest.json
+concurrency:
+  group: publish-manifest
+  cancel-in-progress: false
+
+env:
+  PROJECT: Jellyfin.Plugin.Dubgen.csproj
+  ASSEMBLY: Jellyfin.Plugin.Dubgen
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+
+      - name: Work out version
+        id: ver
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          if [[ "$GITHUB_REF_TYPE" == "tag" ]]; then
+            raw="${GITHUB_REF_NAME#v}"          # tag push: the tag wins
+          elif [[ -n "${INPUT_VERSION:-}" ]]; then
+            raw="${INPUT_VERSION#v}"            # manual run with explicit version
+          else
+            raw="$(grep -oPm1 '(?<=<AssemblyVersion>)[^<]+' "$PROJECT")"   # manual run: csproj
+          fi
+
+          if ! [[ "$raw" =~ ^[0-9]+(\.[0-9]+){0,3}$ ]]; then
+            echo "::error::'$raw' is not a valid version (expected 1-4 numeric parts, e.g. 1.2.0)"; exit 1
+          fi
+          IFS='.' read -ra parts <<< "$raw"
+          while (( ${#parts[@]} < 4 )); do parts+=(0); done   # Jellyfin wants 4 parts
+          version="$(IFS=.; echo "${parts[*]}")"
+
+          if [[ "$GITHUB_REF_TYPE" == "tag" ]]; then tag="$GITHUB_REF_NAME"; else tag="v$version"; fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "tag=$tag"         >> "$GITHUB_OUTPUT"
+          echo "Publishing version $version (release tag $tag)"
+
+      - name: Stamp version into csproj and build.yaml
+        run: |
+          v='${{ steps.ver.outputs.version }}'
+          sed -i -E "s|<AssemblyVersion>[^<]*</AssemblyVersion>|<AssemblyVersion>$v</AssemblyVersion>|; s|<FileVersion>[^<]*</FileVersion>|<FileVersion>$v</FileVersion>|" "$PROJECT"
+          sed -i -E "s|^version:.*|version: \"$v\"|" build.yaml
+          grep -E "AssemblyVersion|FileVersion" "$PROJECT"; grep '^version' build.yaml
+
+      - name: Publish
+        run: dotnet publish "$PROJECT" -c Release -o out
+
+      - name: Package zip
+        id: pkg
+        run: |
+          set -euo pipefail
+          zip_name="${ASSEMBLY}_${{ steps.ver.outputs.version }}.zip"
+          zip -j "$zip_name" "out/${ASSEMBLY}.dll"
+          echo "zip=$zip_name" >> "$GITHUB_OUTPUT"
+          echo "md5=$(md5sum "$zip_name" | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
+
+      - name: Create / update GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CHANGELOG: ${{ inputs.changelog }}
+        run: |
+          tag='${{ steps.ver.outputs.tag }}'
+          zip='${{ steps.pkg.outputs.zip }}'
+          if gh release view "$tag" >/dev/null 2>&1; then
+            gh release upload "$tag" "$zip" --clobber
+          else
+            gh release create "$tag" "$zip" --target "$GITHUB_SHA" \
+              --title "Dubgen $tag" --notes "${CHANGELOG:-Dubgen $tag}"
+          fi
+
+      - name: Update manifest on gh-pages
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.ver.outputs.version }}
+          CHECKSUM: ${{ steps.pkg.outputs.md5 }}
+          CHANGELOG: ${{ inputs.changelog }}
+        run: |
+          set -euo pipefail
+          tag='${{ steps.ver.outputs.tag }}'
+          export SOURCE_URL="https://github.com/${GITHUB_REPOSITORY}/releases/download/${tag}/${{ steps.pkg.outputs.zip }}"
+          repo_url="https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+
+          # Clone gh-pages, or start a fresh orphan branch on first run
+          if ! git clone --depth 1 --branch gh-pages "$repo_url" pages 2>/dev/null; then
+            mkdir pages && git -C pages init -q -b gh-pages && git -C pages remote add origin "$repo_url"
+          fi
+
+          pip install --quiet pyyaml
+          export MANIFEST_PATH="$PWD/pages/manifest.json"
+          python3 .github/scripts/update_manifest.py
+          touch pages/.nojekyll
+
+          cd pages
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Publish ${ASSEMBLY} ${VERSION}" || { echo "No manifest changes"; exit 0; }
+          git push origin gh-pages
+
+          echo "### Manifest URL" >> "$GITHUB_STEP_SUMMARY"
+          echo "\`https://${GITHUB_REPOSITORY_OWNER}.github.io/${GITHUB_REPOSITORY#*/}/manifest.json\`" >> "$GITHUB_STEP_SUMMARY"
