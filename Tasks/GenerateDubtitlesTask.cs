@@ -225,7 +225,7 @@ public class GenerateDubtitlesTask : IScheduledTask
                 IncludeItemTypes = kinds,
                 IsVirtualItem = false,
                 Recursive = true
-            });
+            }).ToList();
         }
 
         var result = new List<BaseItem>();
