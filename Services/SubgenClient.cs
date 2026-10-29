@@ -6,7 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 
-namespace Jellyfin.Plugin.Dubtitles;
+namespace Jellyfin.Plugin.Dubgen;
 
 /// <summary>Talks to Subgen's Bazarr/whisper-asr-compatible POST /asr endpoint.</summary>
 internal sealed class SubgenClient : IDisposable
@@ -51,7 +51,7 @@ internal sealed class SubgenClient : IDisposable
                 return false;
             }
 
-            logger.LogDebug("Dubtitles: Subgen not reachable yet, retrying in 10s");
+            logger.LogDebug("Dubgen: Subgen not reachable yet, retrying in 10s");
             await Task.Delay(TimeSpan.FromSeconds(10), ct).ConfigureAwait(false);
         }
     }

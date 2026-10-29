@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
-namespace Jellyfin.Plugin.Dubtitles;
+namespace Jellyfin.Plugin.Dubgen;
 
 /// <summary>Naming and detection of "&lt;title&gt;.en.Dubtitles.srt" sidecar files.</summary>
 internal static class DubtitleFiles

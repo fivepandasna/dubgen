@@ -2,8 +2,8 @@
 
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
-    <RootNamespace>Jellyfin.Plugin.Dubtitles</RootNamespace>
-    <AssemblyName>Jellyfin.Plugin.Dubtitles</AssemblyName>
+    <RootNamespace>Jellyfin.Plugin.Dubgen</RootNamespace>
+    <AssemblyName>Jellyfin.Plugin.Dubgen</AssemblyName>
     <AssemblyVersion>1.0.0.0</AssemblyVersion>
     <FileVersion>1.0.0.0</FileVersion>
     <Nullable>enable</Nullable>

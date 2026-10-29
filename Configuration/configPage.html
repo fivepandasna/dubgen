@@ -2,22 +2,22 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>Dubtitles</title>
+    <title>Dubgen</title>
 </head>
 <body>
-<div id="DubtitlesConfigPage" data-role="page" class="page type-interior pluginConfigurationPage"
+<div id="DubgenConfigPage" data-role="page" class="page type-interior pluginConfigurationPage"
      data-require="emby-input,emby-button,emby-select,emby-checkbox,emby-textarea">
     <div data-role="content">
         <div class="content-primary">
-            <h1>Dubtitles</h1>
+            <h1>Dubgen</h1>
             <p>
                 Sends the English audio track of foreign-language media to Subgen and saves the result as
                 <code>&lt;title&gt;.en.Dubtitles.srt</code> next to the media file. Run it from
-                <strong>Dashboard &rarr; Scheduled Tasks &rarr; Dubtitles &rarr; Generate Dubtitles</strong>
+                <strong>Dashboard &rarr; Scheduled Tasks &rarr; Dubgen &rarr; Generate Dubtitles</strong>
                 (default: daily at 02:00).
             </p>
 
-            <form id="DubtitlesConfigForm">
+            <form id="DubgenConfigForm">
 
                 <h2>Subgen</h2>
                 <div class="inputContainer">
@@ -159,8 +159,8 @@
     <script type="text/javascript">
         (function () {
             var pluginId = 'b6f3a1c2-7d4e-4f59-9a31-5c8e2d0f1a77';
-            var page = document.querySelector('#DubtitlesConfigPage');
-            var form = document.querySelector('#DubtitlesConfigForm');
+            var page = document.querySelector('#DubgenConfigPage');
+            var form = document.querySelector('#DubgenConfigForm');
 
             function $(id) { return page.querySelector('#' + id); }
 

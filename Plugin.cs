@@ -1,12 +1,12 @@
 using System;
 using System.Collections.Generic;
-using Jellyfin.Plugin.Dubtitles.Configuration;
+using Jellyfin.Plugin.Dubgen.Configuration;
 using MediaBrowser.Common.Configuration;
 using MediaBrowser.Common.Plugins;
 using MediaBrowser.Model.Plugins;
 using MediaBrowser.Model.Serialization;
 
-namespace Jellyfin.Plugin.Dubtitles;
+namespace Jellyfin.Plugin.Dubgen;
 
 public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
 {
@@ -18,7 +18,7 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
 
     public static Plugin? Instance { get; private set; }
 
-    public override string Name => "Dubtitles";
+    public override string Name => "Dubgen";
 
     public override Guid Id => Guid.Parse("b6f3a1c2-7d4e-4f59-9a31-5c8e2d0f1a77");
 

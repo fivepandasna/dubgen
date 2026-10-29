@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using MediaBrowser.Model.Entities;
 
-namespace Jellyfin.Plugin.Dubtitles;
+namespace Jellyfin.Plugin.Dubgen;
 
 internal static class AudioSelector
 {

@@ -1,6 +1,6 @@
 using MediaBrowser.Model.Plugins;
 
-namespace Jellyfin.Plugin.Dubtitles.Configuration;
+namespace Jellyfin.Plugin.Dubgen.Configuration;
 
 public class WebhookSettings
 {

@@ -4,10 +4,10 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Jellyfin.Plugin.Dubtitles.Configuration;
+using Jellyfin.Plugin.Dubgen.Configuration;
 using Microsoft.Extensions.Logging;
 
-namespace Jellyfin.Plugin.Dubtitles;
+namespace Jellyfin.Plugin.Dubgen;
 
 /// <summary>Sends the optional pre-run / post-run webhooks (wake up / shut down a remote Subgen machine).</summary>
 internal static class WebhookClient
@@ -29,7 +29,7 @@ internal static class WebhookClient
         if (!Uri.TryCreate(settings.Url?.Trim(), UriKind.Absolute, out var uri)
             || (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps))
         {
-            logger.LogWarning("Dubtitles: {Event} webhook is enabled but its URL is missing or not a valid http(s) URL", eventName);
+            logger.LogWarning("Dubgen: {Event} webhook is enabled but its URL is missing or not a valid http(s) URL", eventName);
             return false;
         }
 
@@ -39,7 +39,7 @@ internal static class WebhookClient
         try
         {
             using var request = new HttpRequestMessage(method, uri);
-            request.Headers.TryAddWithoutValidation("X-Dubtitles-Event", eventName);
+            request.Headers.TryAddWithoutValidation("X-Dubgen-Event", eventName);
 
             if (!string.IsNullOrWhiteSpace(settings.BearerToken))
             {
@@ -54,17 +54,17 @@ internal static class WebhookClient
             using var response = await Http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, ct).ConfigureAwait(false);
             if (response.IsSuccessStatusCode)
             {
-                logger.LogInformation("Dubtitles: {Event} webhook sent to {Host} ({Status})", eventName, uri.Host, (int)response.StatusCode);
+                logger.LogInformation("Dubgen: {Event} webhook sent to {Host} ({Status})", eventName, uri.Host, (int)response.StatusCode);
                 return true;
             }
 
-            logger.LogWarning("Dubtitles: {Event} webhook to {Host} returned {Status}", eventName, uri.Host, (int)response.StatusCode);
+            logger.LogWarning("Dubgen: {Event} webhook to {Host} returned {Status}", eventName, uri.Host, (int)response.StatusCode);
             return false;
         }
         catch (Exception ex) when (ex is HttpRequestException || (ex is OperationCanceledException && !ct.IsCancellationRequested))
         {
             // HttpRequestException = unreachable / refused; OperationCanceledException without ct = the 60s timeout.
-            logger.LogWarning("Dubtitles: {Event} webhook to {Host} failed: {Message}", eventName, uri.Host, ex.Message);
+            logger.LogWarning("Dubgen: {Event} webhook to {Host} failed: {Message}", eventName, uri.Host, ex.Message);
             return false;
         }
     }

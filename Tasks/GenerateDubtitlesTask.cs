@@ -7,7 +7,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Jellyfin.Data.Enums;
-using Jellyfin.Plugin.Dubtitles.Configuration;
+using Jellyfin.Plugin.Dubgen.Configuration;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Library;
@@ -18,7 +18,7 @@ using MediaBrowser.Model.IO;
 using MediaBrowser.Model.Tasks;
 using Microsoft.Extensions.Logging;
 
-namespace Jellyfin.Plugin.Dubtitles;
+namespace Jellyfin.Plugin.Dubgen;
 
 public class GenerateDubtitlesTask : IScheduledTask
 {
@@ -51,7 +51,7 @@ public class GenerateDubtitlesTask : IScheduledTask
     public string Description =>
         "Transcribes the English dub of foreign-language media with Subgen and saves it as <title>.en.Dubtitles.srt.";
 
-    public string Category => "Dubtitles";
+    public string Category => "Dubgen";
 
     public IEnumerable<TaskTriggerInfo> GetDefaultTriggers()
     {
@@ -68,7 +68,7 @@ public class GenerateDubtitlesTask : IScheduledTask
         var cfg = Plugin.Instance?.Configuration ?? new PluginConfiguration();
         if (string.IsNullOrWhiteSpace(cfg.SubgenUrl))
         {
-            _logger.LogError("Dubtitles: Subgen URL is not configured.");
+            _logger.LogError("Dubgen: Subgen URL is not configured.");
             return;
         }
 
@@ -126,7 +126,7 @@ public class GenerateDubtitlesTask : IScheduledTask
         {
             var removed = candidates.RemoveAll(c => c.Item is Episode e && seriesWithDubtitles.Contains(e.SeriesId));
             _logger.LogInformation(
-                "Dubtitles: skipped {Count} episodes in {Series} series that already have dubtitles",
+                "Dubgen: skipped {Count} episodes in {Series} series that already have dubtitles",
                 removed,
                 seriesWithDubtitles.Count);
         }
@@ -136,7 +136,7 @@ public class GenerateDubtitlesTask : IScheduledTask
             candidates = candidates.Take(cfg.MaxItemsPerRun).ToList();
         }
 
-        _logger.LogInformation("Dubtitles: {Count} item(s) to process", candidates.Count);
+        _logger.LogInformation("Dubgen: {Count} item(s) to process", candidates.Count);
 
         if (candidates.Count == 0)
         {
@@ -162,10 +162,10 @@ public class GenerateDubtitlesTask : IScheduledTask
                 if (cfg.WaitForSubgenReady)
                 {
                     var timeout = TimeSpan.FromMinutes(Math.Max(1, cfg.SubgenReadyTimeoutMinutes));
-                    _logger.LogInformation("Dubtitles: waiting up to {Minutes} min for Subgen at {Url}", timeout.TotalMinutes, cfg.SubgenUrl);
+                    _logger.LogInformation("Dubgen: waiting up to {Minutes} min for Subgen at {Url}", timeout.TotalMinutes, cfg.SubgenUrl);
                     if (!await client.WaitUntilReachableAsync(timeout, _logger, cancellationToken).ConfigureAwait(false))
                     {
-                        _logger.LogError("Dubtitles: Subgen did not become reachable at {Url}, aborting run", cfg.SubgenUrl);
+                        _logger.LogError("Dubgen: Subgen did not become reachable at {Url}, aborting run", cfg.SubgenUrl);
                         return;
                     }
                 }
@@ -180,7 +180,7 @@ public class GenerateDubtitlesTask : IScheduledTask
 
                 try
                 {
-                    _logger.LogInformation("Dubtitles: [{N}/{T}] {Path} (audio stream #{Index}, {Lang})", i + 1, candidates.Count, item.Path, track.Index, track.Language);
+                    _logger.LogInformation("Dubgen: [{N}/{T}] {Path} (audio stream #{Index}, {Lang})", i + 1, candidates.Count, item.Path, track.Index, track.Language);
                     await GenerateAsync(item, track, cfg, client, cancellationToken).ConfigureAwait(false);
                     consecutiveFailures = 0;
                 }
@@ -191,10 +191,10 @@ public class GenerateDubtitlesTask : IScheduledTask
                 catch (Exception ex)
                 {
                     consecutiveFailures++;
-                    _logger.LogWarning(ex, "Dubtitles: failed for {Path}", item.Path);
+                    _logger.LogWarning(ex, "Dubgen: failed for {Path}", item.Path);
                     if (consecutiveFailures >= 3)
                     {
-                        _logger.LogError("Dubtitles: 3 consecutive failures, aborting run. Is Subgen reachable at {Url}?", cfg.SubgenUrl);
+                        _logger.LogError("Dubgen: 3 consecutive failures, aborting run. Is Subgen reachable at {Url}?", cfg.SubgenUrl);
                         break;
                     }
                 }
@@ -241,7 +241,7 @@ public class GenerateDubtitlesTask : IScheduledTask
 
             if (_libraryManager.GetItemById(libraryId) is null)
             {
-                _logger.LogWarning("Dubtitles: selected library {Id} no longer exists, ignoring", id);
+                _logger.LogWarning("Dubgen: selected library {Id} no longer exists, ignoring", id);
                 continue;
             }
 
@@ -266,7 +266,7 @@ public class GenerateDubtitlesTask : IScheduledTask
         if (resolved == 0)
         {
             // Deliberately do not fall back to "all libraries".
-            _logger.LogWarning("Dubtitles: none of the selected libraries exist; nothing to do. Re-select libraries in the plugin settings.");
+            _logger.LogWarning("Dubgen: none of the selected libraries exist; nothing to do. Re-select libraries in the plugin settings.");
         }
 
         return result;
@@ -275,7 +275,7 @@ public class GenerateDubtitlesTask : IScheduledTask
     private async Task GenerateAsync(BaseItem item, MediaStream track, PluginConfiguration cfg, SubgenClient client, CancellationToken ct)
     {
         var outPath = DubtitleFiles.BuildOutputPath(item.Path, cfg.SubtitleTag);
-        var tmpAudio = Path.Combine(Path.GetTempPath(), $"dubtitles-{Guid.NewGuid():N}.flac");
+        var tmpAudio = Path.Combine(Path.GetTempPath(), $"dubgen-{Guid.NewGuid():N}.flac");
         var tmpSrt = outPath + ".tmp";
 
         try
@@ -285,7 +285,7 @@ public class GenerateDubtitlesTask : IScheduledTask
 
             await File.WriteAllTextAsync(tmpSrt, srt, new UTF8Encoding(false), ct).ConfigureAwait(false);
             File.Move(tmpSrt, outPath, overwrite: true);
-            _logger.LogInformation("Dubtitles: wrote {Out}", outPath);
+            _logger.LogInformation("Dubgen: wrote {Out}", outPath);
         }
         finally
         {
@@ -306,7 +306,7 @@ public class GenerateDubtitlesTask : IScheduledTask
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
             {
-                _logger.LogDebug(ex, "Dubtitles: metadata refresh failed for {Path}; it will appear on the next library scan", item.Path);
+                _logger.LogDebug(ex, "Dubgen: metadata refresh failed for {Path}; it will appear on the next library scan", item.Path);
             }
         }
     }
