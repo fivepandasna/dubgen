@@ -46,6 +46,15 @@
                     <span>Include episodes</span>
                 </label>
 
+                <label class="checkboxContainer">
+                    <input id="IncludeEnglishPrimary" is="emby-checkbox" type="checkbox" />
+                    <span>Also process items whose primary audio is English (and that have a foreign-language track)</span>
+                </label>
+                <div class="fieldDescription">
+                    Off: only items with a foreign primary track plus an English track are processed. On: items with an
+                    English primary track plus a foreign track are processed too; the primary English track is sent to Subgen.
+                </div>
+
                 <h2>Skipping</h2>
                 <label class="checkboxContainer">
                     <input id="SkipSeriesWithAnyDubtitles" is="emby-checkbox" type="checkbox" />
@@ -231,6 +240,7 @@
                     $('RequestTimeoutMinutes').value = config.RequestTimeoutMinutes;
                     $('IncludeMovies').checked = !!config.IncludeMovies;
                     $('IncludeEpisodes').checked = !!config.IncludeEpisodes;
+                    $('IncludeEnglishPrimary').checked = !!config.IncludeEnglishPrimary;
                     $('SkipSeriesWithAnyDubtitles').checked = !!config.SkipSeriesWithAnyDubtitles;
                     $('MaxItemsPerRun').value = config.MaxItemsPerRun;
                     $('SubtitleTag').value = config.SubtitleTag || 'Dubtitles';
@@ -256,6 +266,7 @@
                     config.RequestTimeoutMinutes = Math.max(1, toInt('RequestTimeoutMinutes', 120));
                     config.IncludeMovies = $('IncludeMovies').checked;
                     config.IncludeEpisodes = $('IncludeEpisodes').checked;
+                    config.IncludeEnglishPrimary = $('IncludeEnglishPrimary').checked;
                     config.SkipSeriesWithAnyDubtitles = $('SkipSeriesWithAnyDubtitles').checked;
                     config.MaxItemsPerRun = Math.max(0, toInt('MaxItemsPerRun', 0));
                     config.SubtitleTag = $('SubtitleTag').value.trim() || 'Dubtitles';

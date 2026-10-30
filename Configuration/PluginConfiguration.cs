@@ -42,6 +42,13 @@ public class PluginConfiguration : BasePluginConfiguration
     /// </summary>
     public bool SkipSeriesWithAnyDubtitles { get; set; }
 
+    /// <summary>
+    /// false (default): only process items whose primary audio is a foreign language and that also have an English track.
+    /// true: additionally process items whose primary audio is English and that also have a foreign-language track
+    /// (the primary English track is what gets transcribed).
+    /// </summary>
+    public bool IncludeEnglishPrimary { get; set; }
+
     /// <summary>Per-item timeout for the Subgen request.</summary>
     public int RequestTimeoutMinutes { get; set; } = 120;
 

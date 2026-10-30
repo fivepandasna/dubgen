@@ -112,7 +112,7 @@ public class GenerateDubtitlesTask : IScheduledTask
                 if (!hasDubtitle)
                 {
                     var streams = _mediaSourceManager.GetMediaStreams(item.Id);
-                    if (AudioSelector.TryGetEnglishDubTrack(streams, out var track))
+                    if (AudioSelector.TryGetEnglishDubTrack(streams, cfg.IncludeEnglishPrimary, out var track))
                     {
                         candidates.Add(new Candidate(item, track));
                     }
