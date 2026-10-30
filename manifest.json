@@ -3,6 +3,14 @@
     "guid": "b6f3a1c2-7d4e-4f59-9a31-5c8e2d0f1a77",
     "versions": [
       {
+        "version": "1.0.1.0",
+        "changelog": "feat(dubtitles): Add option to generate dubtitles for media with an english primary track and a foreign track",
+        "targetAbi": "12.4.0.0",
+        "sourceUrl": "https://github.com/fivepandasna/dubgen/releases/download/v1.0.1.0/Jellyfin.Plugin.Dubgen_1.0.1.0.zip",
+        "checksum": "8cc07b03ae38eef60925341232cd085f",
+        "timestamp": "2026-10-30T17:20:43Z"
+      },
+      {
         "version": "1.0.0.0",
         "changelog": "Initial build",
         "targetAbi": "12.4.0.0",
